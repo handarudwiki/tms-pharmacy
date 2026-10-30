@@ -23,7 +23,7 @@ message User {
   string email = 3;
   string name = 4;
   repeated string roles = 5;
-  repeated string warehouse_ids = 6;
+  repeated string depot_ids = 6;
   bool active = 7;
   string created_at = 8;
 }
@@ -49,14 +49,14 @@ message CreateUserRequest {
   string name = 2;
   string password = 3;
   repeated string roles = 4;
-  repeated string warehouse_ids = 5;
+  repeated string depot_ids = 5;
 }
 
 message UpdateUserRequest {
   string id = 1;
   string name = 2;
   repeated string roles = 3;
-  repeated string warehouse_ids = 4;
+  repeated string depot_ids = 4;
   bool active = 5;
   string password = 6;
 }
