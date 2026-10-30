@@ -15,6 +15,7 @@ service ShipmentService {
 
   // Lifecycle transitions driven by planning and freight.
   rpc MarkPlanned(MarkPlannedRequest) returns (ListShipmentsResponse);
+  rpc MarkTendered(MarkTenderedRequest) returns (ListShipmentsResponse);
   rpc Unplan(IdsRequest) returns (ListShipmentsResponse);
   rpc MarkDispatched(MarkDispatchedRequest) returns (ListShipmentsResponse);
   rpc RecordDelivery(RecordDeliveryRequest) returns (Shipment);
@@ -72,6 +73,7 @@ message Shipment {
   string created_at = 31;
   string updated_at = 32;
   bool location_approximate = 33;
+  string tender_id = 34;
 }
 
 message CreateShipmentRequest {
@@ -120,6 +122,11 @@ message CancelShipmentRequest {
 message MarkPlannedRequest {
   repeated string ids = 1;
   string trip_id = 2;
+}
+
+message MarkTenderedRequest {
+  repeated string ids = 1;
+  string tender_id = 2;
 }
 
 message MarkDispatchedRequest {

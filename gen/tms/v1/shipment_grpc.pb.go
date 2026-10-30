@@ -24,6 +24,7 @@ const (
 	ShipmentService_GetShipment_FullMethodName          = "/tms.v1.ShipmentService/GetShipment"
 	ShipmentService_CancelShipment_FullMethodName       = "/tms.v1.ShipmentService/CancelShipment"
 	ShipmentService_MarkPlanned_FullMethodName          = "/tms.v1.ShipmentService/MarkPlanned"
+	ShipmentService_MarkTendered_FullMethodName         = "/tms.v1.ShipmentService/MarkTendered"
 	ShipmentService_Unplan_FullMethodName               = "/tms.v1.ShipmentService/Unplan"
 	ShipmentService_MarkDispatched_FullMethodName       = "/tms.v1.ShipmentService/MarkDispatched"
 	ShipmentService_RecordDelivery_FullMethodName       = "/tms.v1.ShipmentService/RecordDelivery"
@@ -46,6 +47,7 @@ type ShipmentServiceClient interface {
 	CancelShipment(ctx context.Context, in *CancelShipmentRequest, opts ...grpc.CallOption) (*Shipment, error)
 	// Lifecycle transitions driven by planning and freight.
 	MarkPlanned(ctx context.Context, in *MarkPlannedRequest, opts ...grpc.CallOption) (*ListShipmentsResponse, error)
+	MarkTendered(ctx context.Context, in *MarkTenderedRequest, opts ...grpc.CallOption) (*ListShipmentsResponse, error)
 	Unplan(ctx context.Context, in *IdsRequest, opts ...grpc.CallOption) (*ListShipmentsResponse, error)
 	MarkDispatched(ctx context.Context, in *MarkDispatchedRequest, opts ...grpc.CallOption) (*ListShipmentsResponse, error)
 	RecordDelivery(ctx context.Context, in *RecordDeliveryRequest, opts ...grpc.CallOption) (*Shipment, error)
@@ -105,6 +107,15 @@ func (c *shipmentServiceClient) CancelShipment(ctx context.Context, in *CancelSh
 func (c *shipmentServiceClient) MarkPlanned(ctx context.Context, in *MarkPlannedRequest, opts ...grpc.CallOption) (*ListShipmentsResponse, error) {
 	out := new(ListShipmentsResponse)
 	err := c.cc.Invoke(ctx, ShipmentService_MarkPlanned_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *shipmentServiceClient) MarkTendered(ctx context.Context, in *MarkTenderedRequest, opts ...grpc.CallOption) (*ListShipmentsResponse, error) {
+	out := new(ListShipmentsResponse)
+	err := c.cc.Invoke(ctx, ShipmentService_MarkTendered_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -211,6 +222,7 @@ type ShipmentServiceServer interface {
 	CancelShipment(context.Context, *CancelShipmentRequest) (*Shipment, error)
 	// Lifecycle transitions driven by planning and freight.
 	MarkPlanned(context.Context, *MarkPlannedRequest) (*ListShipmentsResponse, error)
+	MarkTendered(context.Context, *MarkTenderedRequest) (*ListShipmentsResponse, error)
 	Unplan(context.Context, *IdsRequest) (*ListShipmentsResponse, error)
 	MarkDispatched(context.Context, *MarkDispatchedRequest) (*ListShipmentsResponse, error)
 	RecordDelivery(context.Context, *RecordDeliveryRequest) (*Shipment, error)
@@ -242,6 +254,9 @@ func (UnimplementedShipmentServiceServer) CancelShipment(context.Context, *Cance
 }
 func (UnimplementedShipmentServiceServer) MarkPlanned(context.Context, *MarkPlannedRequest) (*ListShipmentsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MarkPlanned not implemented")
+}
+func (UnimplementedShipmentServiceServer) MarkTendered(context.Context, *MarkTenderedRequest) (*ListShipmentsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MarkTendered not implemented")
 }
 func (UnimplementedShipmentServiceServer) Unplan(context.Context, *IdsRequest) (*ListShipmentsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Unplan not implemented")
@@ -372,6 +387,24 @@ func _ShipmentService_MarkPlanned_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ShipmentServiceServer).MarkPlanned(ctx, req.(*MarkPlannedRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ShipmentService_MarkTendered_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MarkTenderedRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ShipmentServiceServer).MarkTendered(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ShipmentService_MarkTendered_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ShipmentServiceServer).MarkTendered(ctx, req.(*MarkTenderedRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -582,6 +615,10 @@ var ShipmentService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "MarkPlanned",
 			Handler:    _ShipmentService_MarkPlanned_Handler,
+		},
+		{
+			MethodName: "MarkTendered",
+			Handler:    _ShipmentService_MarkTendered_Handler,
 		},
 		{
 			MethodName: "Unplan",
