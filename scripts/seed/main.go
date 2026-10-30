@@ -469,6 +469,26 @@ func backdate(past []pastTrip) {
 			AND e.created_at > now() - interval '1 hour'`, p.id, -p.offset)
 		exec(`UPDATE shipment.exceptions SET created_at = created_at - make_interval(days => $2) WHERE trip_id=$1`, p.id, -p.offset)
 	}
+	// Today's running trips were simulated in seconds; spread them over the morning so far.
+	exec(`UPDATE planning.trips SET started_at = planned_start + interval '8 minutes'
+		WHERE status = 'IN_PROGRESS' AND plan_date = (now() AT TIME ZONE 'Asia/Jakarta')::date`)
+	exec(`UPDATE planning.stops st SET arrived_at = LEAST(st.eta - interval '3 minutes', now() - interval '20 minutes'),
+		completed_at = LEAST(st.eta + interval '7 minutes', now() - interval '10 minutes')
+		FROM planning.trips t WHERE t.id = st.trip_id AND t.status = 'IN_PROGRESS' AND st.status IN ('DELIVERED','FAILED')`)
+	exec(`UPDATE shipment.shipments s SET delivered_at = st.completed_at, updated_at = st.completed_at
+		FROM planning.stops st JOIN planning.trips t ON t.id = st.trip_id
+		WHERE t.status = 'IN_PROGRESS' AND st.status = 'DELIVERED' AND s.id = st.shipment_id`)
+	exec(`UPDATE planning.telemetry m SET recorded_at = t.planned_start + interval '10 minutes'
+			+ (x.rn - 1) * ((LEAST(now(), t.planned_start + interval '9 hours') - t.planned_start - interval '15 minutes') / x.n)
+		FROM (SELECT id, trip_id, row_number() OVER (PARTITION BY trip_id ORDER BY recorded_at, id) AS rn,
+			count(*) OVER (PARTITION BY trip_id) AS n FROM planning.telemetry) x
+		JOIN planning.trips t ON t.id = x.trip_id
+		WHERE m.id = x.id AND t.status = 'IN_PROGRESS'`)
+	exec(`UPDATE planning.trips t SET last_ping_at = (SELECT max(recorded_at) FROM planning.telemetry WHERE trip_id = t.id)
+		WHERE t.status = 'IN_PROGRESS'`)
+	exec(`UPDATE shipment.exceptions e SET created_at = (SELECT recorded_at FROM planning.telemetry WHERE trip_id::text = e.trip_id AND excursion
+		ORDER BY recorded_at LIMIT 1) WHERE e.exception_type = 'TEMPERATURE_EXCURSION'
+		AND EXISTS (SELECT 1 FROM planning.telemetry WHERE trip_id::text = e.trip_id AND excursion)`)
 	// Deliveries were recorded "now" and back-dated above; drop late flags that no longer apply.
 	exec(`DELETE FROM shipment.exceptions e USING shipment.shipments s WHERE e.exception_type='LATE_DELIVERY'
 		AND s.id::text = e.shipment_id AND s.delivered_at::date <= s.required_date`)

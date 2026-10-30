@@ -101,7 +101,7 @@ const progress = (t: any) => (t.stops.length ? ((t.delivered_stops + t.failed_st
             <div><h2 class="card-title">Today's routes</h2><p class="card-sub">Planned (dashed) and running trips · filled stops are delivered</p></div>
             <RouterLink :to="{ name: 'tracking' }" class="text-xs font-semibold text-brand-ink hover:underline">Live tracking</RouterLink>
           </div>
-          <div class="h-[420px]"><RouteMap :trips="trips" :depots="ctx.depot ? [ctx.depot] : []" :color-index="colorIndex" :focus="focus" @select="(id) => router.push({ name: 'trips', query: { id } })" /></div>
+          <div class="h-[520px]"><RouteMap :trips="trips" :depots="ctx.depot ? [ctx.depot] : []" :color-index="colorIndex" :focus="focus" @select="(id) => router.push({ name: 'trips', query: { id } })" /></div>
         </section>
         <section class="card card-pad">
           <div class="mb-3 flex items-start justify-between">
