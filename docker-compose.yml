@@ -1,0 +1,52 @@
+# Full stack: PostgreSQL, five gRPC services and the HTTP gateway (serving the web app).
+# docker compose up --build   →   http://localhost:8090
+x-service: &service
+  build: { context: ., dockerfile: deploy/Dockerfile }
+  restart: unless-stopped
+  depends_on:
+    postgres: { condition: service_healthy }
+  environment: &env
+    DATABASE_URL: postgres://tms:tms@postgres:5432/pharmacy_tms?sslmode=disable
+    TMS_INTERNAL_TOKEN: ${TMS_INTERNAL_TOKEN:-change-me-internal}
+    TMS_JWT_SECRET: ${TMS_JWT_SECRET:-change-me-jwt}
+    FLEET_TARGET: fleet:9102
+    SHIPMENT_TARGET: shipment:9103
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment: { POSTGRES_USER: tms, POSTGRES_PASSWORD: tms, POSTGRES_DB: pharmacy_tms }
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U tms"], interval: 3s, retries: 20 }
+
+  identity:
+    <<: *service
+    build: { context: ., dockerfile: deploy/Dockerfile, args: { SERVICE: identity } }
+  fleet:
+    <<: *service
+    build: { context: ., dockerfile: deploy/Dockerfile, args: { SERVICE: fleet } }
+  shipment:
+    <<: *service
+    build: { context: ., dockerfile: deploy/Dockerfile, args: { SERVICE: shipment } }
+  planning:
+    <<: *service
+    build: { context: ., dockerfile: deploy/Dockerfile, args: { SERVICE: planning } }
+  freight:
+    <<: *service
+    build: { context: ., dockerfile: deploy/Dockerfile, args: { SERVICE: freight } }
+  gateway:
+    <<: *service
+    build: { context: ., dockerfile: deploy/Dockerfile, args: { SERVICE: gateway } }
+    environment:
+      <<: *env
+      IDENTITY_TARGET: identity:9101
+      PLANNING_TARGET: planning:9104
+      FREIGHT_TARGET: freight:9105
+      GATEWAY_ADDR: ":8090"
+      # Pharmacy WMS running on the host (docker compose of the WMS publishes :8080).
+      WMS_API_URL: ${WMS_API_URL:-http://host.docker.internal:8080}
+    ports: ["8090:8090"]
+    depends_on: [identity, fleet, shipment, planning, freight]
+
+volumes:
+  pgdata:
