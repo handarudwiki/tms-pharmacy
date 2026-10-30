@@ -6,6 +6,29 @@ executes and proves their delivery.
 
 **Stack:** Go microservices · gRPC / Protocol Buffers · PostgreSQL · Vue 3 + Pinia + Tailwind · Leaflet (OpenStreetMap).
 
+## Screenshots
+
+Captured from the seeded demo data (`docs/screenshots/`).
+
+| Page | |
+|---|---|
+| Login | [![Login](docs/screenshots/00-login.png)](docs/screenshots/00-login.png) |
+| Dashboard | [![Dashboard](docs/screenshots/01-dashboard.png)](docs/screenshots/01-dashboard.png) |
+| Live Tracking | [![Live Tracking](docs/screenshots/02-live-tracking.png)](docs/screenshots/02-live-tracking.png) |
+| Shipments | [![Shipments](docs/screenshots/03-shipments.png)](docs/screenshots/03-shipments.png) |
+| Planning | [![Planning](docs/screenshots/04-planning.png)](docs/screenshots/04-planning.png) |
+| Trips | [![Trips](docs/screenshots/05-trips.png)](docs/screenshots/05-trips.png) |
+| Fleet Drivers | [![Fleet Drivers](docs/screenshots/06-fleet-drivers.png)](docs/screenshots/06-fleet-drivers.png) |
+| Carriers Tenders | [![Carriers Tenders](docs/screenshots/07-carriers-tenders.png)](docs/screenshots/07-carriers-tenders.png) |
+| Exceptions | [![Exceptions](docs/screenshots/08-exceptions.png)](docs/screenshots/08-exceptions.png) |
+| Analytics | [![Analytics](docs/screenshots/09-analytics.png)](docs/screenshots/09-analytics.png) |
+| Integrations | [![Integrations](docs/screenshots/10-integrations.png)](docs/screenshots/10-integrations.png) |
+| Users Roles | [![Users Roles](docs/screenshots/11-users-roles.png)](docs/screenshots/11-users-roles.png) |
+| Audit Trail | [![Audit Trail](docs/screenshots/12-audit-trail.png)](docs/screenshots/12-audit-trail.png) |
+| Trip Detail | [![Trip Detail](docs/screenshots/13-trip-detail.png)](docs/screenshots/13-trip-detail.png) |
+| Driver App | [![Driver App](docs/screenshots/14-driver-app.png)](docs/screenshots/14-driver-app.png) |
+| Dashboard (dark mode) | [![Dashboard (dark mode)](docs/screenshots/15-dashboard-dark.png)](docs/screenshots/15-dashboard-dark.png) |
+
 ## Architecture
 
 ```
