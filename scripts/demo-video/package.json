@@ -1,0 +1,7 @@
+{
+  "name": "pharmacy-tms-demo-video",
+  "private": true,
+  "type": "module",
+  "scripts": { "record": "node record.mjs ../../docs/demo.mp4" },
+  "dependencies": { "puppeteer-core": "23.11.1" }
+}

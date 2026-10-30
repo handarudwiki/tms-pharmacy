@@ -6,6 +6,13 @@ executes and proves their delivery.
 
 **Stack:** Go microservices · gRPC / Protocol Buffers · PostgreSQL · Vue 3 + Pinia + Tailwind · Leaflet (OpenStreetMap).
 
+## Demo video
+
+[`docs/demo.mp4`](docs/demo.mp4) — a 2-minute walkthrough (Indonesian captions): dashboard and route map, WMS shipment
+import, auto-planning with unplannable shipments, carrier tender with compliance check and award, route optimization
+and release, the driver app with proof of delivery, live tracking, exceptions, analytics and dark mode.
+Regenerate it with `cd scripts/demo-video && npm install && npm run record` on a freshly seeded database.
+
 ## Screenshots
 
 Captured from the seeded demo data (`docs/screenshots/`).

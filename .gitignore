@@ -21,3 +21,5 @@ web/dist/
 .idea/
 .vscode/
 logs/
+scripts/demo-video/node_modules/
+scripts/demo-video/demo-failure.png
