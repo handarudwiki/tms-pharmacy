@@ -248,7 +248,11 @@ func (s *server) MarkTendered(ctx context.Context, req *tmsv1.MarkTenderedReques
 }
 
 func (s *server) Unplan(ctx context.Context, req *tmsv1.IdsRequest) (*tmsv1.ListShipmentsResponse, error) {
-	return s.transition(ctx, req.Ids, []string{"PLANNED", "TENDERED"}, func(tx pgx.Tx, sh *tmsv1.Shipment) error {
+	// DISPATCHED is allowed for in-house trips cancelled before they start (planning enforces that).
+	return s.transition(ctx, req.Ids, []string{"PLANNED", "TENDERED", "DISPATCHED"}, func(tx pgx.Tx, sh *tmsv1.Shipment) error {
+		if sh.Status == "DISPATCHED" && sh.CarrierId != "" {
+			return errs.Precondition("shipment %s is already with carrier %s", sh.ShipmentNumber, sh.CarrierName)
+		}
 		if _, err := tx.Exec(ctx, `UPDATE shipments SET status='PENDING', trip_id='', tender_id='', updated_at=now() WHERE id=$1`, sh.Id); err != nil {
 			return err
 		}
