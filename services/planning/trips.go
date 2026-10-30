@@ -284,11 +284,35 @@ func (s *server) AutoPlan(ctx context.Context, req *tmsv1.AutoPlanRequest) (*tms
 	// Urgent shipments are placed first within the sweep.
 	sort.SliceStable(remaining, func(a, b int) bool { return remaining[a].Priority == 1 && remaining[b].Priority != 1 })
 
-	sort.SliceStable(vehicles, func(a, b int) bool { return vehicles[a].CapacityKg > vehicles[b].CapacityKg })
-	for _, v := range vehicles {
-		if v.Status != "AVAILABLE" || booked[v.Id] || len(remaining) == 0 {
-			continue
+	sort.SliceStable(vehicles, func(a, b int) bool { return vehicles[a].CapacityKg < vehicles[b].CapacityKg })
+	tried := map[string]bool{}
+	for len(remaining) > 0 {
+		// Right-size: take the smallest free vehicle that can carry the next route's expected
+		// load (the first maxStops compatible shipments in sweep order), else the largest one.
+		var v *tmsv1.Vehicle
+		for _, cand := range vehicles {
+			if cand.Status != "AVAILABLE" || booked[cand.Id] || tried[cand.Id] {
+				continue
+			}
+			target, n := 0.0, 0
+			for _, sh := range remaining {
+				if sh.TemperatureClass == cand.TemperatureClass && n < maxStops {
+					target += sh.WeightKg
+					n++
+				}
+			}
+			if n == 0 {
+				continue
+			}
+			if v == nil || (cand.CapacityKg >= target && (v.CapacityKg < target || cand.CapacityKg < v.CapacityKg)) ||
+				(v.CapacityKg < target && cand.CapacityKg > v.CapacityKg) {
+				v = cand
+			}
 		}
+		if v == nil {
+			break
+		}
+		tried[v.Id] = true
 		// Prefer the most qualified free driver so controlled/cold loads stay possible.
 		var driver *tmsv1.Driver
 		for _, d := range drivers {
