@@ -1,0 +1,23 @@
+# Go
+/bin/
+*.test
+*.out
+# binaries from `go build ./services/<name>` at the repository root
+/identity
+/fleet
+/shipment
+/planning
+/freight
+/gateway
+
+# Node
+node_modules/
+web/dist/
+*.local
+
+# Env / OS / logs
+.env
+.DS_Store
+.idea/
+.vscode/
+logs/
