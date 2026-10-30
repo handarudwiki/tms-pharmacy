@@ -1,0 +1,140 @@
+syntax = "proto3";
+
+package tms.v1;
+
+import "tms/v1/common.proto";
+
+option go_package = "github.com/handarudwiki/pharmacy-tms/gen/tms/v1;tmsv1";
+
+// FleetService owns depots, vehicles, drivers and maintenance records.
+service FleetService {
+  rpc CreateDepot(Depot) returns (Depot);
+  rpc ListDepots(Empty) returns (ListDepotsResponse);
+  rpc GetDepot(IdRequest) returns (Depot);
+
+  rpc UpsertVehicle(Vehicle) returns (Vehicle);
+  rpc ListVehicles(ListVehiclesRequest) returns (ListVehiclesResponse);
+  rpc GetVehicle(IdRequest) returns (Vehicle);
+  rpc SetVehicleStatus(SetStatusRequest) returns (Vehicle);
+
+  rpc UpsertDriver(Driver) returns (Driver);
+  rpc ListDrivers(ListDriversRequest) returns (ListDriversResponse);
+  rpc GetDriver(IdRequest) returns (Driver);
+  rpc SetDriverStatus(SetStatusRequest) returns (Driver);
+
+  rpc RecordMaintenance(Maintenance) returns (Maintenance);
+  rpc ListMaintenance(ListMaintenanceRequest) returns (ListMaintenanceResponse);
+
+  rpc GetStats(FleetStatsRequest) returns (FleetStats);
+}
+
+message Depot {
+  string id = 1;
+  string code = 2;
+  string name = 3;
+  string address = 4;
+  double lat = 5;
+  double lng = 6;
+  string created_at = 7;
+}
+
+message ListDepotsResponse {
+  repeated Depot depots = 1;
+}
+
+message Vehicle {
+  string id = 1;
+  string depot_id = 2;
+  string plate = 3;
+  string vehicle_type = 4;      // MOTORBIKE, VAN, BOX_TRUCK, REEFER_VAN, REEFER_TRUCK
+  double capacity_kg = 5;
+  double capacity_volume_l = 6;
+  string temperature_class = 7; // AMBIENT, COLD
+  bool controlled_certified = 8;
+  string status = 9;            // AVAILABLE, MAINTENANCE, INACTIVE
+  double odometer_km = 10;
+  double fuel_km_per_liter = 11;
+  string next_service_date = 12;
+  string status_reason = 13;
+  string created_at = 14;
+}
+
+message ListVehiclesRequest {
+  string depot_id = 1;
+  string status = 2;
+  repeated string ids = 3;
+}
+
+message ListVehiclesResponse {
+  repeated Vehicle vehicles = 1;
+}
+
+message Driver {
+  string id = 1;
+  string depot_id = 2;
+  string name = 3;
+  string phone = 4;
+  string license_number = 5;
+  string license_class = 6;
+  string license_expiry = 7;
+  bool cold_chain_certified = 8;
+  bool controlled_certified = 9;
+  string status = 10; // ACTIVE, ON_LEAVE, INACTIVE
+  string user_email = 11;
+  string created_at = 12;
+}
+
+message ListDriversRequest {
+  string depot_id = 1;
+  string status = 2;
+  repeated string ids = 3;
+  string user_email = 4;
+}
+
+message ListDriversResponse {
+  repeated Driver drivers = 1;
+}
+
+message SetStatusRequest {
+  string id = 1;
+  string status = 2;
+  string reason = 3;
+}
+
+message Maintenance {
+  string id = 1;
+  string vehicle_id = 2;
+  string maintenance_type = 3; // SERVICE, REPAIR, INSPECTION, TIRES
+  string description = 4;
+  string performed_on = 5;
+  double cost = 6;
+  double odometer_km = 7;
+  string next_due_date = 8;
+  string recorded_by = 9;
+  string created_at = 10;
+}
+
+message ListMaintenanceRequest {
+  string vehicle_id = 1;
+  int32 limit = 2;
+}
+
+message ListMaintenanceResponse {
+  repeated Maintenance records = 1;
+}
+
+message FleetStatsRequest {
+  string depot_id = 1;
+}
+
+message FleetStats {
+  int64 vehicles = 1;
+  int64 vehicles_available = 2;
+  int64 vehicles_maintenance = 3;
+  int64 reefer_vehicles = 4;
+  int64 drivers_active = 5;
+  int64 licenses_expiring_30d = 6;
+  int64 licenses_expired = 7;
+  int64 services_due_14d = 8;
+  double maintenance_cost_30d = 9;
+}

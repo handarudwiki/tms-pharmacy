@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package tms.v1;
+
+option go_package = "github.com/handarudwiki/pharmacy-tms/gen/tms/v1;tmsv1";
+
+message Empty {}
+
+message IdRequest {
+  string id = 1;
+}
+
+message IdsRequest {
+  repeated string ids = 1;
+}
+
+message DailyCount {
+  string date = 1;
+  int64 created = 2;
+  int64 delivered = 3;
+}
+
+message StatusCount {
+  string status = 1;
+  int64 count = 2;
+}

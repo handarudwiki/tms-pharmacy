@@ -1,0 +1,215 @@
+syntax = "proto3";
+
+package tms.v1;
+
+import "tms/v1/common.proto";
+
+option go_package = "github.com/handarudwiki/pharmacy-tms/gen/tms/v1;tmsv1";
+
+// ShipmentService owns shipments, their event timeline, proof of delivery and exceptions.
+service ShipmentService {
+  rpc CreateShipment(CreateShipmentRequest) returns (Shipment);
+  rpc ListShipments(ListShipmentsRequest) returns (ListShipmentsResponse);
+  rpc GetShipment(IdRequest) returns (Shipment);
+  rpc CancelShipment(CancelShipmentRequest) returns (Shipment);
+
+  // Lifecycle transitions driven by planning and freight.
+  rpc MarkPlanned(MarkPlannedRequest) returns (ListShipmentsResponse);
+  rpc Unplan(IdsRequest) returns (ListShipmentsResponse);
+  rpc MarkDispatched(MarkDispatchedRequest) returns (ListShipmentsResponse);
+  rpc RecordDelivery(RecordDeliveryRequest) returns (Shipment);
+  rpc RecordFailedDelivery(RecordFailedDeliveryRequest) returns (Shipment);
+  rpc AssignCarrier(AssignCarrierRequest) returns (Shipment);
+
+  rpc ListEvents(IdRequest) returns (ListEventsResponse);
+  rpc RaiseException(TransportException) returns (TransportException);
+  rpc ListExceptions(ListExceptionsRequest) returns (ListExceptionsResponse);
+  rpc ResolveException(ResolveExceptionRequest) returns (TransportException);
+  rpc GetStats(ShipmentStatsRequest) returns (ShipmentStats);
+}
+
+message ProofOfDelivery {
+  string receiver_name = 1;
+  bool signature_captured = 2;
+  string note = 3;
+  double lat = 4;
+  double lng = 5;
+  string recorded_at = 6;
+  string recorded_by = 7;
+}
+
+message Shipment {
+  string id = 1;
+  string shipment_number = 2;
+  string external_ref = 3;
+  string source = 4;            // WMS, MANUAL
+  string depot_id = 5;
+  string consignee_name = 6;
+  string consignee_phone = 7;
+  string address = 8;
+  string city = 9;
+  double lat = 10;
+  double lng = 11;
+  string window_start = 12;     // HH:MM
+  string window_end = 13;
+  string required_date = 14;
+  double weight_kg = 15;
+  double volume_l = 16;
+  int32 packages = 17;
+  string temperature_class = 18; // AMBIENT, COLD
+  bool controlled = 19;
+  int32 priority = 20;
+  string status = 21; // PENDING, PLANNED, DISPATCHED, DELIVERED, FAILED, RETURNED, CANCELLED, TENDERED
+  string trip_id = 22;
+  string carrier_id = 23;
+  string carrier_name = 24;
+  double freight_cost = 25;
+  int32 attempts = 26;
+  ProofOfDelivery pod = 27;
+  string delivered_at = 28;
+  bool delivered_on_time = 29;
+  string notes = 30;
+  string created_at = 31;
+  string updated_at = 32;
+  bool location_approximate = 33;
+}
+
+message CreateShipmentRequest {
+  string external_ref = 1;
+  string source = 2;
+  string depot_id = 3;
+  string consignee_name = 4;
+  string consignee_phone = 5;
+  string address = 6;
+  string city = 7;
+  double lat = 8;
+  double lng = 9;
+  string window_start = 10;
+  string window_end = 11;
+  string required_date = 12;
+  double weight_kg = 13;
+  double volume_l = 14;
+  int32 packages = 15;
+  string temperature_class = 16;
+  bool controlled = 17;
+  int32 priority = 18;
+  string notes = 19;
+  bool location_approximate = 20;
+}
+
+message ListShipmentsRequest {
+  string depot_id = 1;
+  string status = 2;
+  repeated string statuses = 3;
+  repeated string ids = 4;
+  string trip_id = 5;
+  string query = 6;
+  string required_by = 7; // include shipments due on or before this date
+  int32 limit = 8;
+}
+
+message ListShipmentsResponse {
+  repeated Shipment shipments = 1;
+}
+
+message CancelShipmentRequest {
+  string id = 1;
+  string reason = 2;
+}
+
+message MarkPlannedRequest {
+  repeated string ids = 1;
+  string trip_id = 2;
+}
+
+message MarkDispatchedRequest {
+  repeated string ids = 1;
+  string trip_id = 2;
+  string vehicle_plate = 3;
+  string driver_name = 4;
+}
+
+message RecordDeliveryRequest {
+  string id = 1;
+  ProofOfDelivery pod = 2;
+  string idempotency_key = 3;
+}
+
+message RecordFailedDeliveryRequest {
+  string id = 1;
+  string reason = 2;     // CUSTOMER_ABSENT, REFUSED, ADDRESS_NOT_FOUND, DAMAGED, CLOSED, OTHER
+  string note = 3;
+  bool reschedule = 4;   // back to PENDING for re-planning, otherwise RETURNED
+}
+
+message AssignCarrierRequest {
+  string id = 1;
+  string carrier_id = 2;
+  string carrier_name = 3;
+  double freight_cost = 4;
+  string tender_id = 5;
+}
+
+message ShipmentEvent {
+  string id = 1;
+  string shipment_id = 2;
+  string event_type = 3;
+  string description = 4;
+  string actor = 5;
+  string created_at = 6;
+}
+
+message ListEventsResponse {
+  repeated ShipmentEvent events = 1;
+}
+
+message TransportException {
+  string id = 1;
+  string depot_id = 2;
+  string exception_type = 3; // FAILED_DELIVERY, TEMPERATURE_EXCURSION, LATE_DELIVERY, UNPLANNABLE, RETURNED, ...
+  string severity = 4;
+  string shipment_id = 5;
+  string shipment_number = 6;
+  string trip_id = 7;
+  string details = 8;
+  string status = 9; // OPEN, RESOLVED
+  string raised_by = 10;
+  string resolved_by = 11;
+  string resolution = 12;
+  string created_at = 13;
+  string resolved_at = 14;
+}
+
+message ListExceptionsRequest {
+  string depot_id = 1;
+  string status = 2;
+  int32 limit = 3;
+}
+
+message ListExceptionsResponse {
+  repeated TransportException exceptions = 1;
+}
+
+message ResolveExceptionRequest {
+  string id = 1;
+  string resolution = 2;
+}
+
+message ShipmentStatsRequest {
+  string depot_id = 1;
+}
+
+message ShipmentStats {
+  repeated StatusCount status_counts = 1;
+  int64 created_today = 2;
+  int64 delivered_today = 3;
+  double on_time_pct = 4;
+  double otif_pct = 5;
+  double failed_rate_pct = 6;
+  int64 open_exceptions = 7;
+  int64 cold_chain_excursions_30d = 8;
+  repeated DailyCount trend = 9;
+  double avg_lead_time_hours = 10;
+  double outsourced_pct = 11;
+  double carrier_spend_30d = 12;
+}

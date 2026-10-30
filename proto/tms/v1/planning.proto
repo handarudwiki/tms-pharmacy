@@ -1,0 +1,188 @@
+syntax = "proto3";
+
+package tms.v1;
+
+import "tms/v1/common.proto";
+
+option go_package = "github.com/handarudwiki/pharmacy-tms/gen/tms/v1;tmsv1";
+
+// PlanningService owns trips: automatic and manual planning, route optimization,
+// execution (release, start, stops, completion) and vehicle telemetry.
+service PlanningService {
+  rpc AutoPlan(AutoPlanRequest) returns (AutoPlanResponse);
+  rpc CreateTrip(CreateTripRequest) returns (Trip);
+  rpc ListTrips(ListTripsRequest) returns (ListTripsResponse);
+  rpc GetTrip(IdRequest) returns (Trip);
+  rpc OptimizeTrip(IdRequest) returns (Trip);
+  rpc ReleaseTrip(IdRequest) returns (Trip);
+  rpc StartTrip(IdRequest) returns (Trip);
+  rpc ArriveStop(StopRequest) returns (Trip);
+  rpc CompleteStop(CompleteStopRequest) returns (Trip);
+  rpc FailStop(FailStopRequest) returns (Trip);
+  rpc CompleteTrip(IdRequest) returns (Trip);
+  rpc CancelTrip(CancelTripRequest) returns (Trip);
+  rpc RecordTelemetry(Telemetry) returns (Telemetry);
+  rpc ListTelemetry(ListTelemetryRequest) returns (ListTelemetryResponse);
+  rpc GetStats(PlanningStatsRequest) returns (PlanningStats);
+}
+
+message Stop {
+  string id = 1;
+  int32 sequence = 2;
+  string shipment_id = 3;
+  string shipment_number = 4;
+  string consignee_name = 5;
+  string address = 6;
+  double lat = 7;
+  double lng = 8;
+  string eta = 9;
+  string window_start = 10;
+  string window_end = 11;
+  bool eta_outside_window = 12;
+  double distance_from_prev_km = 13;
+  string status = 14; // PENDING, ARRIVED, DELIVERED, FAILED
+  string arrived_at = 15;
+  string completed_at = 16;
+  double weight_kg = 17;
+  int32 packages = 18;
+  string temperature_class = 19;
+  bool controlled = 20;
+  string failure_reason = 21;
+}
+
+message Trip {
+  string id = 1;
+  string trip_number = 2;
+  string depot_id = 3;
+  string vehicle_id = 4;
+  string vehicle_plate = 5;
+  string driver_id = 6;
+  string driver_name = 7;
+  string plan_date = 8;
+  string status = 9; // PLANNED, RELEASED, IN_PROGRESS, COMPLETED, CANCELLED
+  double distance_km = 10;
+  int32 duration_min = 11;
+  double weight_kg = 12;
+  double volume_l = 13;
+  double capacity_util_pct = 14;
+  double estimated_cost = 15;
+  string temperature_class = 16;
+  repeated Stop stops = 17;
+  string planned_start = 18;
+  string started_at = 19;
+  string completed_at = 20;
+  string created_by = 21;
+  string created_at = 22;
+  double last_lat = 23;
+  double last_lng = 24;
+  double last_temperature_c = 25;
+  string last_ping_at = 26;
+  int32 delivered_stops = 27;
+  int32 failed_stops = 28;
+  double depot_lat = 29;
+  double depot_lng = 30;
+  string driver_email = 31;
+}
+
+message AutoPlanRequest {
+  string depot_id = 1;
+  string plan_date = 2;
+}
+
+message Unplanned {
+  string shipment_id = 1;
+  string shipment_number = 2;
+  string reason = 3;
+}
+
+message AutoPlanResponse {
+  repeated Trip trips = 1;
+  repeated Unplanned unplanned = 2;
+}
+
+message CreateTripRequest {
+  string depot_id = 1;
+  string vehicle_id = 2;
+  string driver_id = 3;
+  string plan_date = 4;
+  repeated string shipment_ids = 5;
+}
+
+message ListTripsRequest {
+  string depot_id = 1;
+  string plan_date = 2;
+  string status = 3;
+  repeated string statuses = 4;
+  string driver_email = 5;
+  int32 limit = 6;
+}
+
+message ListTripsResponse {
+  repeated Trip trips = 1;
+}
+
+message StopRequest {
+  string trip_id = 1;
+  string stop_id = 2;
+}
+
+message CompleteStopRequest {
+  string trip_id = 1;
+  string stop_id = 2;
+  string receiver_name = 3;
+  bool signature_captured = 4;
+  string note = 5;
+  double lat = 6;
+  double lng = 7;
+}
+
+message FailStopRequest {
+  string trip_id = 1;
+  string stop_id = 2;
+  string reason = 3;
+  string note = 4;
+  bool reschedule = 5;
+}
+
+message CancelTripRequest {
+  string id = 1;
+  string reason = 2;
+}
+
+message Telemetry {
+  string id = 1;
+  string trip_id = 2;
+  double lat = 3;
+  double lng = 4;
+  double temperature_c = 5;
+  bool has_temperature = 6;
+  double speed_kmh = 7;
+  string recorded_at = 8;
+  bool excursion = 9;
+}
+
+message ListTelemetryRequest {
+  string trip_id = 1;
+  int32 limit = 2;
+}
+
+message ListTelemetryResponse {
+  repeated Telemetry readings = 1;
+}
+
+message PlanningStatsRequest {
+  string depot_id = 1;
+}
+
+message PlanningStats {
+  int64 trips_today = 1;
+  int64 active_trips = 2;
+  int64 completed_today = 3;
+  double avg_utilization_pct = 4;
+  double avg_stops_per_trip = 5;
+  double distance_km_7d = 6;
+  double cost_7d = 7;
+  double cost_per_km_7d = 8;
+  int64 late_stops_planned = 9;
+  repeated StatusCount status_counts = 10;
+}

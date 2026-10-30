@@ -1,0 +1,142 @@
+syntax = "proto3";
+
+package tms.v1;
+
+import "tms/v1/common.proto";
+
+option go_package = "github.com/handarudwiki/pharmacy-tms/gen/tms/v1;tmsv1";
+
+// FreightService owns carriers, rate cards and freight tenders for outsourced shipments.
+service FreightService {
+  rpc UpsertCarrier(Carrier) returns (Carrier);
+  rpc ListCarriers(ListCarriersRequest) returns (ListCarriersResponse);
+  rpc GetCarrier(IdRequest) returns (Carrier);
+
+  rpc CreateTender(CreateTenderRequest) returns (Tender);
+  rpc ListTenders(ListTendersRequest) returns (ListTendersResponse);
+  rpc GetTender(IdRequest) returns (Tender);
+  rpc SubmitBid(SubmitBidRequest) returns (Tender);
+  rpc AwardTender(AwardTenderRequest) returns (Tender);
+  rpc CancelTender(CancelTenderRequest) returns (Tender);
+  rpc GetStats(FreightStatsRequest) returns (FreightStats);
+}
+
+message Carrier {
+  string id = 1;
+  string code = 2;
+  string name = 3;
+  string service_level = 4; // SAME_DAY, NEXT_DAY, REGULAR
+  bool supports_cold = 5;
+  bool supports_controlled = 6;
+  double base_rate = 7;      // IDR per shipment
+  double rate_per_kg = 8;
+  double rate_per_km = 9;
+  double cold_surcharge_pct = 10;
+  double on_time_pct = 11;
+  string contact = 12;
+  bool active = 13;
+  int32 transit_days = 14;
+}
+
+message ListCarriersRequest {
+  bool include_inactive = 1;
+}
+
+message ListCarriersResponse {
+  repeated Carrier carriers = 1;
+}
+
+message Bid {
+  string id = 1;
+  string carrier_id = 2;
+  string carrier_name = 3;
+  double amount = 4;
+  int32 transit_days = 5;
+  bool compliant = 6;
+  string non_compliance_reason = 7;
+  string source = 8; // RATE_CARD, MANUAL
+  string note = 9;
+  string submitted_at = 10;
+}
+
+message TenderShipment {
+  string shipment_id = 1;
+  string shipment_number = 2;
+  string consignee_name = 3;
+  double weight_kg = 4;
+  double distance_km = 5;
+  string temperature_class = 6;
+  bool controlled = 7;
+}
+
+message Tender {
+  string id = 1;
+  string tender_number = 2;
+  string depot_id = 3;
+  string status = 4; // OPEN, AWARDED, CANCELLED
+  repeated TenderShipment shipments = 5;
+  repeated Bid bids = 6;
+  string awarded_bid_id = 7;
+  double total_weight_kg = 8;
+  double total_distance_km = 9;
+  bool requires_cold = 10;
+  bool requires_controlled = 11;
+  string deadline = 12;
+  string created_by = 13;
+  string created_at = 14;
+  string awarded_at = 15;
+  string cancel_reason = 16;
+}
+
+message CreateTenderRequest {
+  string depot_id = 1;
+  repeated string shipment_ids = 2;
+  string deadline = 3;
+}
+
+message ListTendersRequest {
+  string depot_id = 1;
+  string status = 2;
+}
+
+message ListTendersResponse {
+  repeated Tender tenders = 1;
+}
+
+message SubmitBidRequest {
+  string tender_id = 1;
+  string carrier_id = 2;
+  double amount = 3;
+  int32 transit_days = 4;
+  string note = 5;
+}
+
+message AwardTenderRequest {
+  string tender_id = 1;
+  string bid_id = 2;
+}
+
+message CancelTenderRequest {
+  string id = 1;
+  string reason = 2;
+}
+
+message FreightStatsRequest {
+  string depot_id = 1;
+}
+
+message CarrierSpend {
+  string carrier_id = 1;
+  string carrier_name = 2;
+  double spend = 3;
+  int64 shipments = 4;
+  double weight_kg = 5;
+}
+
+message FreightStats {
+  int64 open_tenders = 1;
+  int64 awarded_30d = 2;
+  double spend_30d = 3;
+  double avg_savings_pct = 4;
+  repeated CarrierSpend by_carrier = 5;
+}

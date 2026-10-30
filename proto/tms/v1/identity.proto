@@ -1,0 +1,86 @@
+syntax = "proto3";
+
+package tms.v1;
+
+import "tms/v1/common.proto";
+
+option go_package = "github.com/handarudwiki/pharmacy-tms/gen/tms/v1;tmsv1";
+
+// IdentityService owns organizations, users, roles and the audit trail.
+service IdentityService {
+  rpc Login(LoginRequest) returns (LoginResponse);
+  rpc GetUser(IdRequest) returns (User);
+  rpc ListUsers(Empty) returns (ListUsersResponse);
+  rpc CreateUser(CreateUserRequest) returns (User);
+  rpc UpdateUser(UpdateUserRequest) returns (User);
+  rpc RecordAudit(AuditEvent) returns (Empty);
+  rpc ListAudit(ListAuditRequest) returns (ListAuditResponse);
+}
+
+message User {
+  string id = 1;
+  string org_id = 2;
+  string email = 3;
+  string name = 4;
+  repeated string roles = 5;
+  repeated string warehouse_ids = 6;
+  bool active = 7;
+  string created_at = 8;
+}
+
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  string token = 1;
+  string expires_at = 2;
+  User user = 3;
+  string org_name = 4;
+}
+
+message ListUsersResponse {
+  repeated User users = 1;
+}
+
+message CreateUserRequest {
+  string email = 1;
+  string name = 2;
+  string password = 3;
+  repeated string roles = 4;
+  repeated string warehouse_ids = 5;
+}
+
+message UpdateUserRequest {
+  string id = 1;
+  string name = 2;
+  repeated string roles = 3;
+  repeated string warehouse_ids = 4;
+  bool active = 5;
+  string password = 6;
+}
+
+message AuditEvent {
+  string id = 1;
+  string org_id = 2;
+  string actor_id = 3;
+  string actor_email = 4;
+  string action = 5;
+  string entity_type = 6;
+  string entity_id = 7;
+  string correlation_id = 8;
+  string details = 9;
+  string created_at = 10;
+}
+
+message ListAuditRequest {
+  string entity_type = 1;
+  string entity_id = 2;
+  string actor_id = 3;
+  int32 limit = 4;
+}
+
+message ListAuditResponse {
+  repeated AuditEvent events = 1;
+}
